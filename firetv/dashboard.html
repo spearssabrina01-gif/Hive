@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brain Dump — Hive Dashboard</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#0a0f16; font-family:system-ui,sans-serif; color:#fff; overflow:hidden; }
+  .dash { position:fixed; inset:0; display:flex; flex-direction:column; padding:28px 40px; gap:18px; box-sizing:border-box; }
+  header { display:flex; align-items:baseline; gap:18px; }
+  h1 { font-size:2.2rem; margin:0; }
+  .sub { font-size:1.1rem; color:#9fb3c8; }
+  .focus { background:#5b4a00; color:#ffd54a; font-weight:bold; padding:4px 12px; border-radius:8px; font-size:1rem; display:none; }
+  .cols { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; flex:1; min-height:0; }
+  .col { background:#131c28; border:1px solid #2c3947; border-radius:12px; padding:16px 20px; overflow:auto; }
+  .col h2 { margin:0 0 12px; font-size:1.3rem; }
+  .item { padding:10px 0; border-bottom:1px solid #22303f; font-size:1.05rem; }
+  .item:last-child { border-bottom:none; }
+  .item small { display:block; color:#9fb3c8; margin-top:2px; }
+  .chip { display:inline-block; font-size:.8rem; font-weight:bold; padding:2px 10px; border-radius:6px; margin-left:8px; vertical-align:middle; }
+  .chip.waiting { background:#ff9800; color:#000; }
+  .chip.arrived { background:#2e7d32; color:#fff; }
+  .empty { color:#9fb3c8; font-size:1.05rem; }
+  button { font-size:1.2rem; padding:10px 32px; border-radius:10px; border:none; background:#00a8e1; color:#fff; cursor:pointer; align-self:flex-start; }
+  button:focus { outline:4px solid #fff; }
+  .badge { position:absolute; top:16px; right:20px; background:#ff9800; color:#000; font-weight:bold; padding:6px 14px; border-radius:8px; }
+</style>
+</head>
+<body>
+<div class="dash">
+  <div class="badge">SIMULATED (v1) — Vega .vpkg build is a later milestone</div>
+  <header>
+    <h1>🧠 Brain Dump</h1>
+    <span class="sub" id="when">Your day at a glance — Bee's list + Ring's eyes, most important first</span>
+    <span class="focus" id="focus-chip">🔇 FOCUS MODE</span>
+  </header>
+  <div class="cols">
+    <section class="col">
+      <h2>📌 Expected visits (Bee)</h2>
+      <div id="visitors"><p class="empty">Loading…</p></div>
+    </section>
+    <section class="col">
+      <h2>🔔 Ring today</h2>
+      <div id="ring"><p class="empty">Loading…</p></div>
+    </section>
+    <section class="col">
+      <h2>📝 Bee's notes</h2>
+      <div id="notes"><p class="empty">Loading…</p></div>
+    </section>
+  </div>
+  <button id="refresh" autofocus>Refresh</button>
+</div>
+<script>
+  // Hive Brain Dump dashboard (Fire TV surface, SIMULATED panel in v1).
+  // Data comes from the hub's GET /api/brain-dump, which composes Bee's
+  // expected-visitors store + the day-notes store — no separate data here.
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const time = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+
+  async function load() {
+    const d = await fetch('/api/brain-dump').then((r) => r.json());
+    document.getElementById('focus-chip').style.display = d.focus_mode ? 'inline-block' : 'none';
+    document.getElementById('when').textContent =
+      'Your day at a glance — as of ' + new Date(d.generated_at).toLocaleTimeString();
+
+    document.getElementById('visitors').innerHTML = d.expected_visitors.length
+      ? d.expected_visitors.map((v) =>
+          `<div class="item"><b>${esc(v.name)}</b><span class="chip ${esc(v.status)}">${esc(v.status).toUpperCase()}</span>` +
+          `<small>expected ${time(v.expected_at)}${v.arrived_at ? ' · arrived ' + time(v.arrived_at) : ''}</small></div>`).join('')
+      : '<p class="empty">No expected visits — tell Bee who\'s coming.</p>';
+
+    document.getElementById('ring').innerHTML = d.ring_events.length
+      ? d.ring_events.map((e) => `<div class="item">${esc(e.text)}<small>${time(e.at)}</small></div>`).join('')
+      : '<p class="empty">Quiet at the door so far today.</p>';
+
+    document.getElementById('notes').innerHTML = d.bee_notes.length
+      ? d.bee_notes.map((n) => `<div class="item">${esc(n.text)}<small>${time(n.at)}</small></div>`).join('')
+      : '<p class="empty">Nothing in Bee\'s notes yet.</p>';
+  }
+  document.getElementById('refresh').onclick = load;
+  load();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front Door — Visitor Overlay</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#000; font-family:system-ui,sans-serif; color:#fff; overflow:hidden; }
+  .overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; }
+  .live { display:flex; align-items:center; gap:10px; font-size:2rem; letter-spacing:.15em; }
+  .dot { width:18px; height:18px; border-radius:50%; background:#e00; animation:blink 1.2s infinite; }
+  @keyframes blink { 50% { opacity:.2; } }
+  .feed { width:70vw; height:52vh; background:linear-gradient(135deg,#1b2a3a,#0a0f16); border:2px solid #444; border-radius:12px;
+          display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:#9fb3c8; }
+  h1 { font-size:2.6rem; margin:0; }
+  .sub { font-size:1.4rem; color:#9fb3c8; }
+  button { font-size:1.6rem; padding:14px 48px; border-radius:10px; border:none; background:#00a8e1; color:#fff; cursor:pointer; }
+  button:focus { outline:4px solid #fff; }
+  .badge { position:absolute; top:16px; right:20px; background:#ff9800; color:#000; font-weight:bold; padding:6px 14px; border-radius:8px; }
+  /* Hive Focus Mode: quiet picture-in-picture — small corner card over the
+     (pretend) program, no full-screen takeover, no audio announcement. */
+  body.pip { background:linear-gradient(160deg,#232323,#101010); }
+  body.pip::before { content:'▶ your show keeps playing…'; position:fixed; left:32px; top:28px; font-size:1.3rem; color:#666; }
+  body.pip .overlay { inset:auto; right:22px; bottom:22px; width:34vw; max-width:520px; padding:16px 18px; gap:10px;
+                      background:rgba(8,14,22,.94); border:2px solid #3c4c5e; border-radius:14px; box-shadow:0 10px 40px rgba(0,0,0,.6); }
+  body.pip .live { font-size:1rem; letter-spacing:.08em; }
+  body.pip .dot { width:10px; height:10px; animation:none; background:#ffb300; }
+  body.pip .feed { width:100%; height:20vh; font-size:.95rem; }
+  body.pip h1 { font-size:1.35rem; }
+  body.pip .sub { font-size:.95rem; }
+  body.pip button { font-size:1rem; padding:8px 26px; }
+  body.pip .badge { font-size:.72rem; padding:4px 9px; top:8px; right:10px; }
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="badge">SIMULATED (v1) — Vega .vpkg build is a later milestone</div>
+  <div class="live"><span class="dot"></span> <span id="live-label">LIVE · Front Door</span></div>
+  <div class="feed">📷 Door camera feed placeholder<br>(real feed once Ring video is wired)</div>
+  <h1 id="who">Your cleaner is here</h1>
+  <div class="sub" id="when"></div>
+  <button id="dismiss" autofocus>Dismiss</button>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  document.getElementById('who').textContent = q.get('who') || 'Your cleaner is here';
+  document.getElementById('when').textContent = q.get('when') || '';
+  if (q.get('pip') === '1') {
+    // Hive Focus Mode: quiet picture-in-picture — door shown, nothing spoken.
+    document.body.classList.add('pip');
+    document.getElementById('live-label').textContent = 'Front Door · quiet alert';
+    const when = document.getElementById('when');
+    when.textContent = (when.textContent ? when.textContent + ' · ' : '') + '🔇 Focus Mode — shown quietly, no announcement';
+  }
+  document.getElementById('dismiss').onclick = () => {
+    document.getElementById('overlay').style.display = 'none';
+    window.parent.postMessage({ type: 'firetv_dismissed' }, '*');
+  };
+</script>
+</body>
+</html>
