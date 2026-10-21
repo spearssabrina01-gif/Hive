@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "express": "^4.19.2",
+    "zod": "^3.23.8"
+  },
+  "description": "Amazon Hive — Build, Ship, Shape (4 for All) hackathon entry: an ambient-intelligence hub where Bee captures context, Ring is the sensory perimeter, Alexa+ routes/announces, Fire TV is the visual surface, and Bee logs/remembers — plus a Brain Dump dashboard and Focus Mode.",
+  "license": "MIT",
+  "main": "hub/server.js",
+  "name": "amazon-4-for-all",
+  "scripts": {
+    "start": "node hub/server.js",
+    "test": "node tests/mcp.test.js"
+  },
+  "version": "0.1.0",
+  "type": "module"
+}
